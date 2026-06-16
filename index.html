@@ -5,101 +5,17 @@
 <title>Arolla – Exposition interactive sur l'évolution du paysage fluvial</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-</script>
-
-<script src="https://unpkg.com/georaster">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
-
-</script>
-<script src="https://unpkg.com/georaster-layer-for-leaflet">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
-
-</script>
+<script src="https://unpkg.com/georaster"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet"></script>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css">
-<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js">
-/* Sécurité d'affichage initial :
-   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
-   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
-setTimeout(function(){
-  hideAllRivers();
-  selectedRiverYear = "";
-  const select = document.getElementById("litYearSelect");
-  if(select){ select.value = ""; }
-  updateLegend();
-}, 1200);
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -899,7 +815,7 @@ Le script ci-dessous organise la visualisation en plusieurs blocs :
 1. déclaration des fichiers ;
 2. création de la carte Leaflet et des fonds cartographiques ;
 3. chargement des GeoTIFF avec GeoRaster ;
-4. chargement des GeoJSON : lits de lit de rivière historiques, ZA et ZC ;
+4. chargement des GeoJSON : lits du cours d'eau historiques, ZA et ZC ;
 5. correction automatique des GeoJSON encore en EPSG:2056 ;
 6. création d'une légende dynamique selon les couches activées ;
 7. création des profils transversaux avec Leaflet Draw, Turf.js et Chart.js ;
@@ -1262,11 +1178,8 @@ function loadRiver(year, file, color){
       refreshLayerControl();
 
       if(year === "2015"){
-        riverLayers[year].addTo(map);
-        riverLayers[year].bringToFront();
-
         setStatus(
-          "Lit de rivière 2015 chargée correctement. Elle apparaît en magenta pour vérification."
+          "Lit du cours d’eau 2015 chargé. Sélectionnez 2015 dans le menu pour l'afficher."
         );
       }
     })
@@ -1823,7 +1736,7 @@ function showRecentRivers(){
       riverLayers[year].addTo(map);
       riverLayers[year].bringToFront();
     }else if(year === "2015"){
-      setStatus("La lit de rivière 2015 n'est pas chargée. Vérifiez le nom R2015.geojson.");
+      setStatus("Le lit du cours d’eau 2015 n'est pas chargé. Vérifiez le nom R2015.geojson.");
     }
   });
   if(demLayer){ map.fitBounds(demLayer.getBounds()); }
