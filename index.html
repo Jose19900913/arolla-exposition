@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Arolla – Exposition interactive sur l'évolution du paysage fluvial</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+
+<script src="https://unpkg.com/georaster">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css">
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js">
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --forest:#17332f;
+  --forest2:#25483f;
+  --cream:#f5efe4;
+  --clay:#b86f44;
+  --ink:#1d2528;
+  --muted:#65706b;
+  --blue:#246b8f;
+  --soft:#f7efe2;
+}
+
+body{
+  margin:0;
+  font-family:'Inter',Arial,sans-serif;
+  color:var(--ink);
+  background:var(--cream);
+}
+
+header{
+  min-height:115px;
+  padding:30px 36px;
+  color:white;
+  background:
+    linear-gradient(135deg,rgba(18,47,43,0.96),rgba(44,73,64,0.88)),
+    url("https://cdn.prod.website-files.com/641ee8457e17a61009ec8151/666c6edf814670099929017c_DSC_1845_web-p-800.jpg");
+  background-size:cover;
+  background-position:center;
+  border-bottom:4px solid var(--clay);
+}
+
+header .tag{
+  display:inline-block;
+  background:rgba(255,255,255,0.16);
+  border:1px solid rgba(255,255,255,0.25);
+  border-radius:999px;
+  padding:6px 12px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+header h1{
+  margin:0;
+  font-size:33px;
+  font-weight:800;
+  letter-spacing:-0.5px;
+}
+
+header p{
+  margin-top:8px;
+  max-width:920px;
+  font-size:15px;
+  font-weight:500;
+  color:#f5eadc;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:37% 63%;
+  height:calc(100vh - 179px);
+}
+
+.story{
+  padding:24px;
+  overflow-y:auto;
+  background:var(--soft);
+  border-right:1px solid #dacdbb;
+}
+
+.chapter{
+  background:rgba(255,255,255,0.97);
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:22px;
+  border:1px solid #dccbb8;
+  border-left:5px solid var(--clay);
+  box-shadow:0 10px 28px rgba(68,44,25,0.12);
+}
+
+.chapter h2{
+  margin-top:0;
+  color:var(--forest);
+  font-size:20px;
+  font-weight:800;
+}
+
+.chapter p{
+  font-size:14px;
+  line-height:1.65;
+}
+
+.expo-box{
+  background:#eef4ef;
+  border-left:5px solid var(--forest2);
+  border-radius:12px;
+  padding:14px;
+  font-size:13px;
+  margin:14px 0;
+}
+
+.question-box{
+  background:#fff3d7;
+  border-left:5px solid #d99b2b;
+  padding:14px;
+  font-size:13px;
+  border-radius:12px;
+  margin-top:14px;
+}
+
+button{
+  background:linear-gradient(135deg,var(--forest),var(--forest2));
+  color:white;
+  border:none;
+  border-radius:999px;
+  padding:10px 16px;
+  font-weight:700;
+  cursor:pointer;
+  margin:5px 5px 5px 0;
+  box-shadow:0 4px 10px rgba(0,0,0,0.18);
+}
+
+button:hover{
+  background:linear-gradient(135deg,var(--clay),#8e4e2d);
+}
+
+.photo-box img{
+  width:100%;
+  border-radius:16px;
+  box-shadow:0 12px 26px rgba(0,0,0,0.22);
+}
+
+.caption{
+  font-size:12px;
+  color:var(--muted);
+}
+
+#map{
+  height:100%;
+  width:100%;
+  background:#d8d0c2;
+}
+
+.slider-box{
+  margin-top:12px;
+  padding:12px;
+  background:#f2eadf;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.slider-box input{
+  width:55%;
+  accent-color:var(--clay);
+}
+
+.legend{
+  background:rgba(255,255,255,0.96);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25);
+  font-size:13px;
+  line-height:1.45;
+  max-width:330px;
+}
+
+.legend span.box{
+  display:inline-block;
+  width:24px;
+  height:16px;
+  margin-right:8px;
+  border:1px solid #666;
+  border-radius:4px;
+  vertical-align:middle;
+}
+
+.legend span.line{
+  display:inline-block;
+  width:30px;
+  border-top:4px solid;
+  margin-right:8px;
+  vertical-align:middle;
+}
+
+.north-arrow{
+  background:white;
+  border-radius:14px;
+  padding:9px 12px;
+  box-shadow:0 8px 22px rgba(0,0,0,0.25);
+  text-align:center;
+  font-weight:800;
+  color:var(--forest);
+}
+
+.north-arrow .arrow{
+  font-size:32px;
+  line-height:26px;
+}
+
+.leaflet-control-layers{
+  border-radius:16px !important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25) !important;
+  border:0 !important;
+  font-family:'Inter',Arial,sans-serif;
+  font-size:13px;
+}
+
+.leaflet-control-zoom{
+  border-radius:14px !important;
+  overflow:hidden;
+  box-shadow:0 8px 22px rgba(0,0,0,0.22);
+}
+
+.leaflet-control-scale{
+  background:rgba(255,255,255,0.94);
+  padding:6px 8px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.18);
+  margin-top:8px !important;
+}
+
+.leaflet-control-scale-line{
+  border-color:#17332f !important;
+  color:#17332f !important;
+  font-weight:700;
+  background:rgba(255,255,255,0.85);
+}
+
+
+.profile-box{
+  margin-top:14px;
+  background:linear-gradient(180deg,#ffffff,#f6eddf);
+  border-radius:16px;
+  padding:10px;
+  box-shadow:0 8px 18px rgba(0,0,0,0.14);
+}
+
+.profile-title{
+  font-size:12px;
+  font-weight:800;
+  color:var(--forest);
+  margin:2px 0 6px 0;
+}
+
+.profile-canvas{
+  height:120px !important;
+  max-height:120px !important;
+}
+
+.profile-canvas-small{
+  height:105px !important;
+  max-height:105px !important;
+}
+
+.status-box{
+  margin-top:12px;
+  background:#eef4ef;
+  border-left:4px solid #25483f;
+  border-radius:10px;
+  padding:10px;
+  font-size:12px;
+  color:#233834;
+}
+
+
+.glossaire{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+.glossaire-item{
+  background:#f8f4ec;
+  border:1px solid #e1d3c0;
+  border-left:4px solid var(--forest2);
+  border-radius:12px;
+  padding:11px 12px;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.glossaire-item b{
+  color:var(--forest);
+}
+
+.recommandation{
+  background:#eef4ef;
+  border-left:5px solid #2f6f5e;
+  border-radius:12px;
+  padding:13px;
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.warning-soft{
+  background:#fff3d7;
+  border-left:5px solid #d99b2b;
+  border-radius:12px;
+  padding:13px;
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.icon-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+
+.icon-card{
+  background:#ffffff;
+  border:1px solid #e1d3c0;
+  border-radius:14px;
+  padding:12px;
+  font-size:13px;
+  box-shadow:0 5px 14px rgba(68,44,25,0.08);
+}
+
+.icon-card .ico{
+  font-size:22px;
+  display:block;
+  margin-bottom:5px;
+}
+
+
+a{
+  color:#246b8f;
+  font-weight:700;
+}
+
+.year-selector-box{
+  margin-top:14px;
+  padding:14px;
+  background:#f8f4ec;
+  border:1px solid #e1d3c0;
+  border-left:5px solid var(--forest2);
+  border-radius:14px;
+  font-size:13px;
+}
+
+.year-selector-box label{
+  display:block;
+  font-weight:800;
+  color:var(--forest);
+  margin-bottom:8px;
+}
+
+.year-selector-box select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #cbbba7;
+  background:white;
+  color:var(--ink);
+  font-weight:700;
+  font-family:'Inter',Arial,sans-serif;
+}
+
+.year-help{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Sous-menu intégré directement dans le panneau Leaflet des couches */
+.lit-control{
+  background:transparent !important;
+  border-radius:0 !important;
+  padding:8px 0 2px 0 !important;
+  box-shadow:none !important;
+  font-family:'Inter',Arial,sans-serif;
+  font-size:12px;
+  width:auto !important;
+  margin-top:6px !important;
+  border-top:1px solid #dedede !important;
+}
+
+.lit-control-title{
+  font-weight:800;
+  color:#17332f;
+  margin:4px 0 5px 0;
+  font-size:12px;
+}
+
+.lit-control label{
+  display:block;
+  font-size:11px;
+  color:#233834;
+  margin:4px 0;
+  font-weight:700;
+}
+
+.lit-control select{
+  width:100%;
+  padding:6px 7px;
+  border-radius:8px;
+  border:1px solid #cbbba7;
+  background:white;
+  color:#1d2528;
+  font-weight:700;
+  font-family:'Inter',Arial,sans-serif;
+  font-size:11px;
+}
+
+.lit-control-note{
+  margin-top:5px;
+  font-size:10px;
+  color:#65706b;
+  line-height:1.25;
+}
+
+.leaflet-control-layers{
+  min-width:205px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!--
+NOTE INTERNE - SUPPRESSION D'UNE ANNÉE NON DISPONIBLE
+Une année de lit du cours d’eau a été retirée de la visualisation, car l'information
+n'est pas disponible dans le jeu de données final. Elle n'apparaît donc plus dans le
+sélecteur, la légende active, ni le chargement des fichiers GeoJSON.
+-->
+
+
+
+
+<!--
+NOTE INTERNE - CORRECTION R2015
+R2015.geojson est chargé au démarrage pour être disponible dans le sélecteur,
+mais il n'est plus affiché automatiquement. Cela évite que le lit de 2015 apparaisse
+comme un défaut visuel au chargement initial de la page.
+-->
+
+
+<!--
+NOTE INTERNE - AFFICHAGE INITIAL
+La visualisation démarre volontairement avec le fond satellite seul.
+Aucune couche thématique n'est activée au chargement initial afin d'éviter une surcharge visuelle
+pour le public de l'exposition. Les couches DEM, MNT_CN, DoD, ZA, ZC et les lits du cours d'eau
+sont disponibles dans le panneau de contrôle et peuvent être activées progressivement.
+-->
+
+
+<!--
+NOTE INTERNE - LECTURE DU DoD
+Le DoD devient lisible surtout quand l'utilisateur zoome jusqu'à ce que la barre
+d'échelle Leaflet indique environ 30 m. Cette remarque est affichée dans la section DoD
+et dans la légende active pour guider un public non spécialiste.
+-->
+
+
+<!--
+===============================================================================
+LECTURE INTERNE POUR LE PROFESSEUR / EXPLICATION DU CODE
+===============================================================================
+
+Ce fichier HTML construit une visualisation interactive du paysage fluvial d'Arolla.
+Il est pensé comme un support de médiation pour une exposition locale, et non comme
+un outil SIG technique réservé aux spécialistes.
+
+Public cible :
+Habitants de la commune d'Évolène, habitants d'Arolla et personnes liées aux activités
+locales ou touristiques. Le but est de relier les transformations fluviales aux lieux
+habités, aux espaces fréquentés et aux activités proches du lit du cours d'eau.
+
+Message principal :
+Le paysage d'Arolla est dynamique. Le lit du cours d'eau a changé de position dans le temps
+et certaines parties du fond de vallée montrent des zones d'érosion ou de dépôt.
+
+Couches utilisées :
+- DEM.tif : relief ombré / hillshade pour lire la forme du terrain.
+- MNT_CN.tif : MNT visible dans la carte.
+- MNT.tif : MNT utilisé pour calculer le profil topographique.
+- DoD.tif : carte visible des changements morphologiques 2019-2024.
+- DoD_OR.tif : DoD original non renderisé utilisé pour le profil d'érosion/dépôt.
+- R1959 à R2023 : tracés historiques du lit du cours d'eau.
+- ZA.geojson : zone habitée.
+- ZC.geojson : camping / contexte touristique.
+
+DoD :
+DoD signifie "Difference of DEM", c'est-à-dire différence entre deux modèles numériques
+d'élévation. Il indique où le terrain s'est abaissé, élevé ou est resté relativement stable.
+
+Profils :
+Deux profils sont séparés pour ne pas confondre l'altitude absolue et le changement
+morphologique :
+1. Profil MNT = altitude du terrain.
+2. Profil DoD_OR = variation du terrain entre 2019 et 2024.
+
+Attention :
+Cette visualisation n'est pas une carte officielle de danger naturel. Elle sert à
+comprendre les transformations du paysage. Elle peut néanmoins soutenir une réflexion
+de prévention douce, notamment pendant les périodes de pluie ou de forte mobilité
+sédimentaire.
+
+===============================================================================
+-->
+
+
+<header>
+<span class="tag">Exposition locale · Évolène / Arolla</span>
+<h1>Arolla : un paysage fluvial en mouvement</h1>
+<p>
+Une visualisation interactive pour découvrir comment le lit du cours d’eau, le fond de vallée et les espaces habités se transforment au fil du temps.
+</p>
+</header>
+
+<div class="layout">
+
+<div class="story">
+
+<section class="chapter">
+<h2>1. Point de départ de l'exposition</h2>
+<p>
+Cette visualisation est pensée comme un support d'exposition locale pour la commune d'Évolène,
+avec un regard particulier sur Arolla et ses alentours. Elle ne s'adresse pas seulement au camping :
+elle cherche à relier les transformations du lit du cours d’eau aux lieux habités, aux espaces fréquentés
+et aux activités locales.
+</p>
+<p>
+Le site s'adresse à un public non spécialiste : habitants, visiteurs réguliers, personnes travaillant
+ou vivant à proximité d'Arolla, intéressés par l'évolution du paysage mais sans connaissance préalable en SIG.
+</p>
+
+<div class="expo-box">
+<b>Public cible :</b><br>
+Habitants de la commune d'Évolène, d'Arolla et des alentours, âgés principalement d'environ
+<b>40 à 70 ans</b>. Ce public connaît souvent le territoire par l'expérience quotidienne,
+les souvenirs, les promenades, le travail ou les activités touristiques, mais il ne possède pas
+nécessairement de compétences en géomatique.
+<br><br>
+La carte cherche donc à rendre visibles et compréhensibles les transformations du paysage en les reliant
+à des lieux connus : zones habitées, camping, chemins, espaces proches du lit du cours d’eau et secteurs
+fréquentés par la communauté locale.
+</div>
+
+<div class="icon-row">
+  <div class="icon-card"><span class="ico">🏘️</span><b>ZA</b><br>Zone habitée : espaces de vie et secteurs proches du village.</div>
+  <div class="icon-card"><span class="ico">⛺</span><b>ZC</b><br>Camping / contexte : espace touristique connu et fréquenté.</div>
+  <div class="icon-card"><span class="ico">🌊</span><b>Lits du cours d’eau</b><br>Tracés du chenal à différentes dates.</div>
+  <div class="icon-card"><span class="ico">⛰️</span><b>Relief</b><br>Lecture simple de la forme du fond de vallée.</div>
+</div>
+
+<p>
+Le message principal est simple : <b>le paysage d'Arolla n'est pas immobile</b>. Le lit du cours d’eau
+a changé de position au fil des décennies et certaines parties du fond de vallée ont connu des phases
+d’érosion ou de dépôt.
+</p>
+
+<button onclick="goToArolla()">📍 Voir Arolla aujourd'hui</button>
+
+<div class="photo-box">
+<img
+src="https://cdn.prod.website-files.com/641ee8457e17a61009ec8151/666c6edf814670099929017c_DSC_1845_web-p-800.jpg"
+alt="Camping d'Arolla">
+<p class="caption">
+Figure 1. Vue d'Arolla. Source :
+<a href="https://www.campingarolla.com/" target="_blank">Camping Arolla</a>.
+</p>
+</div>
+
+<div id="statusBox" class="status-box">
+Visualisation initiale : fond satellite uniquement. Activez ensuite les couches souhaitées dans le panneau de droite.
+</div>
+</section>
+
+<section class="chapter">
+<h2>2. Contexte d'utilisation</h2>
+<p>
+Imaginez cette carte dans une exposition locale à Évolène ou à Arolla. Le visiteur arrive devant l'écran
+avec une question simple : <b>comment le paysage que je connais a-t-il changé au fil du temps ?</b>
+</p>
+<p>
+La visualisation l’invite à explorer progressivement le territoire. Il peut d’abord observer Arolla sur l’image
+satellite, puis activer les couches une par une : relief, zone habitée, camping, lits anciens du cours d’eau
+et zones de transformation du terrain.
+</p>
+<p>
+Le but n’est pas de donner une réponse technique, mais d’aider le visiteur à reconnaître des lieux familiers
+et à comprendre que le fond de vallée est un espace mobile. La carte sert donc de support de discussion,
+de mémoire locale et de sensibilisation.
+</p>
+
+<div class="question-box">
+<b>Question proposée au visiteur :</b><br>
+Le paysage que nous connaissons aujourd'hui à Arolla a-t-il toujours eu la même forme ?
+</div>
+</section>
+
+<section class="chapter">
+<h2>3. Lire le relief</h2>
+<p>
+Avant de regarder les changements du lit du cours d’eau, il est utile de comprendre la forme générale du terrain.
+Le fond de vallée, les pentes et les zones plus basses expliquent en partie pourquoi l’eau circule à certains endroits.
+</p>
+<p>
+Le relief ombré fonctionne comme une image en lumière et en ombre : il aide à voir les formes du terrain sans devoir
+lire une carte technique. La couche <b>MNT_CN</b> permet de visualiser l’altitude, tandis que le fichier <b>MNT</b>
+sert seulement au calcul des profils transversaux.
+</p>
+
+<div class="glossaire">
+  <div class="glossaire-item"><b>MNT</b> : Modèle Numérique de Terrain. Il indique l'altitude du sol.</div>
+  <div class="glossaire-item"><b>Relief ombré</b> : image qui rend les pentes et les creux plus faciles à voir.</div>
+  <div class="glossaire-item"><b>Profil transversal</b> : coupe dessinée sur la carte pour voir comment l'altitude change le long d'une ligne.</div>
+</div>
+
+<button onclick="showDEM()">⛰️ Afficher le relief ombré</button>
+<button onclick="hideDEM()">Masquer le relief</button>
+<button onclick="showMNT()">🗻 Afficher MNT_CN</button>
+<button onclick="hideMNT()">Masquer MNT_CN</button>
+
+<div class="slider-box">
+Transparence relief ombré :
+<input type="range" min="0" max="100" value="85" oninput="setDEMOpacity(this.value)">
+</div>
+
+<div class="slider-box">
+Transparence MNT_CN :
+<input type="range" min="0" max="100" value="65" oninput="setMNTOpacity(this.value)">
+</div>
+</section>
+
+<section class="chapter">
+<h2>4. Suivre le lit du cours d’eau dans le temps</h2>
+<p>
+Cette partie permet d’observer où passait le lit du cours d’eau à différentes dates. Le mot <b>lit</b>
+désigne ici la forme cartographiée du chenal, c’est-à-dire l’espace occupé ou parcouru par l’écoulement
+à un moment donné.
+</p>
+<p>
+Pour un habitant ou un visiteur qui connaît Arolla, cette comparaison permet de voir que le cours d’eau
+n’a pas toujours occupé exactement la même position. Certains tracés sont proches, d’autres montrent
+des déplacements plus visibles dans le fond de vallée.
+</p>
+
+<div class="glossaire">
+  <div class="glossaire-item"><b>Lit du cours d’eau</b> : espace occupé par l’écoulement et les chenaux visibles à une date donnée. Ce terme est plus précis que « rivière », car il désigne la forme cartographiée du chenal.</div>
+</div>
+
+<div class="question-box">
+<b>Lecture de la carte :</b><br>
+Le choix de l'année se fait dans le menu intégré au panneau des couches. La légende active affiche seulement
+les années visibles, ce qui évite une liste trop lourde.
+</div>
+
+<button onclick="showOldRivers()">🕰️ Anciens lits</button>
+<button onclick="showRecentRivers()">📍 Lits récents</button>
+<button onclick="hideAllRivers()">Masquer les lits</button>
+
+<div class="slider-box">
+Transparence du lit affiché :
+<input type="range" min="0" max="100" value="90" oninput="setRiverOpacity(this.value)">
+</div>
+</section>
+
+<section class="chapter">
+<h2>5. Où le terrain a-t-il changé ?</h2>
+<p>
+Cette couche montre les endroits où le terrain a changé entre <b>2019 et 2024</b>. Elle ne dit pas seulement
+où se trouve le lit du cours d’eau : elle aide aussi à repérer les zones où des matériaux ont été enlevés
+ou déposés.
+</p>
+<p>
+Le terme <b>DoD</b> signifie <i>Difference of DEM</i>. En termes simples, cela veut dire que l’on compare
+deux modèles du terrain réalisés à deux dates différentes. La différence entre les deux permet de voir
+les changements du fond de vallée.
+</p>
+
+<div class="glossaire">
+  <div class="glossaire-item"><b>Bleu</b> : secteur où le terrain s’est abaissé ou où des matériaux ont été enlevés. On parle d’érosion.</div>
+  <div class="glossaire-item"><b>Gris clair</b> : secteur relativement stable ou avec peu de changement visible.</div>
+  <div class="glossaire-item"><b>Orange / rouge</b> : secteur où des matériaux se sont accumulés. On parle de dépôt.</div>
+</div>
+
+<div class="warning-soft">
+🔎 <b>Comment voir les détails du DoD ?</b><br>
+Pour mieux distinguer les couleurs, rapprochez-vous jusqu'à ce que la barre d'échelle située dans le coin supérieur gauche
+indique environ <b>30 m</b>. À cette échelle, les différences entre érosion, stabilité et dépôt deviennent plus visibles.
+</div>
+
+<button onclick="showDoD()">🔎 Afficher les zones de transformation</button>
+<button onclick="hideDoD()">Masquer les transformations</button>
+
+<div class="slider-box">
+Transparence DoD :
+<input type="range" min="0" max="100" value="70" oninput="setDoDOpacity(this.value)">
+</div>
+
+<div class="question-box">
+<b>À observer :</b><br>
+Les couleurs ne doivent pas être lues comme une carte officielle de danger. Elles indiquent plutôt des secteurs
+où le paysage a changé. Pendant les périodes de pluie intense ou de forte fonte, ces informations peuvent aider
+à comprendre pourquoi certains espaces proches du lit du cours d’eau demandent une attention particulière.
+</div>
+</section>
+
+<section class="chapter">
+<h2>6. Lieux habités et espaces fréquentés</h2>
+<p>
+La couche <b>ZA</b> localise les zones habitées d'Arolla et de ses alentours. La couche <b>ZC</b> localise le camping
+ou les espaces touristiques. Ces deux repères permettent de relier les transformations du paysage aux lieux connus
+par la communauté locale.
+</p>
+<p>
+Cette mise en relation est importante, car certaines activités économiques et touristiques proches du lit du cours d'eau
+peuvent être sensibles aux transformations du fond de vallée. L'objectif n'est pas d'alarmer, mais de favoriser
+une lecture préventive et partagée du territoire.
+</p>
+
+<div class="recommandation">
+<b>Pistes de médiation pour une exposition :</b><br>
+• améliorer la signalisation locale près des zones proches du lit du cours d'eau ;<br>
+• expliquer aux visiteurs la différence entre érosion, dépôt et crue ;<br>
+• rappeler une vigilance particulière pendant les épisodes de pluie ;<br>
+• relier les cartes aux lieux connus : village, camping, chemins, espaces fréquentés.
+</div>
+
+<button onclick="showZA()">🏘️ Afficher zone habitée</button>
+<button onclick="hideZA()">Masquer zone habitée</button>
+<button onclick="showZC()">⛺ Afficher camping / contexte</button>
+<button onclick="hideZC()">Masquer camping / contexte</button>
+</section>
+
+<section class="chapter">
+<h2>7. Comparer le relief et les changements</h2>
+<p>
+Tracez une ligne sur la carte. Le premier profil montre la topographie actuelle du terrain. Le deuxième profil
+montre les variations mesurées dans le DoD original.
+</p>
+
+<button onclick="activateProfileTool()">✏️ Tracer un profil</button>
+<button onclick="clearProfile()">Effacer le profil</button>
+
+<div class="profile-box">
+  <div class="profile-title">Profil 1 — Relief topographique du MNT</div>
+  <canvas id="profileChartMNT" class="profile-canvas"></canvas>
+</div>
+
+<div class="profile-box">
+  <div class="profile-title">Profil 2 — Érosion / dépôt à partir du DoD_OR</div>
+  <canvas id="profileChartDoD" class="profile-canvas-small"></canvas>
+</div>
+
+<div class="question-box">
+<b>Comment lire les profils ?</b><br>
+Le profil supérieur montre la forme du terrain en altitude absolue. Le profil inférieur montre les changements :
+valeurs positives = dépôt ; valeurs négatives = érosion.
+</div>
+</section>
+
+<section class="chapter">
+<h2>8. Message final de l'exposition</h2>
+<p>
+Arolla est un paysage vivant. Le lit du cours d'eau s'est déplacé au fil du temps et le fond de vallée continue de se transformer.
+Cette visualisation permet aux visiteurs de passer d'un lieu familier à une lecture plus attentive de son évolution.
+</p>
+</section>
+
+</div>
+
+<div id="map"></div>
+
+</div>
+
+
+<!--
+===============================================================================
+NOTE TECHNIQUE SUR LE JAVASCRIPT
+===============================================================================
+Le script ci-dessous organise la visualisation en plusieurs blocs :
+1. déclaration des fichiers ;
+2. création de la carte Leaflet et des fonds cartographiques ;
+3. chargement des GeoTIFF avec GeoRaster ;
+4. chargement des GeoJSON : lits de lit de rivière historiques, ZA et ZC ;
+5. correction automatique des GeoJSON encore en EPSG:2056 ;
+6. création d'une légende dynamique selon les couches activées ;
+7. création des profils transversaux avec Leaflet Draw, Turf.js et Chart.js ;
+8. chargement forcé de R2015 pour garantir sa présence dans la carte.
+
+Cette structure commentée permet d'expliquer le code dans le rendu.
+===============================================================================
+-->
+
+<script>
+/* =========================================================
+FICHIERS DU PROJET
+Important :
+- MNT_CN.tif est utilisé pour VISUALISER le MNT dans la carte.
+- MNT.tif est utilisé pour CALCULER le profil topographique.
+- DoD.tif est la carte DoD renderisée pour la visualisation.
+- DoD_OR.tif est le DoD original en données crues pour le profil morphologique.
+- ZA.geojson = zone habitée.
+- ZC.geojson = camping / contexte.
+========================================================= */
+
+const demFile = "DEM.tif";
+const mntDisplayFile = "MNT_CN.tif";
+const elevationFile = "MNT.tif";
+const dodFile = "DoD.tif";
+const dodOrFile = "DoD_OR.tif";
+const zcFile = "ZC.geojson";
+const zaFile = "ZA.geojson";
+
+/* Définition EPSG:2056 pour transformer automatiquement les GeoJSON LV95 vers Leaflet (EPSG:4326).
+   Cela corrige R2015.geojson même s'il est encore exporté en EPSG:2056. */
+proj4.defs(
+  "EPSG:2056",
+  "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs"
+);
+
+const riverFiles = [
+  {year:"1959", file:"R1959.geojson", color:"#08306b"},
+  {year:"1961", file:"R1961.geojson", color:"#08519c"},
+  {year:"1965", file:"R1965.geojson", color:"#2171b5"},
+  {year:"1970", file:"R1970.geojson", color:"#4292c6"},
+  {year:"1976", file:"R1976.geojson", color:"#6baed6"},
+  {year:"1983", file:"R1983.geojson", color:"#c6dbef"},
+  {year:"1999", file:"R1999.geojson", color:"#238b45"},
+  {year:"2001", file:"R2001.geojson", color:"#41ab5d"},
+  {year:"2005", file:"R2005.geojson", color:"#74c476"},
+  {year:"2015", file:"R2015.geojson", color:"#ff00ff"},
+  {year:"2017", file:"R2017.geojson", color:"#fe9929"},
+  {year:"2020", file:"R2020.geojson", color:"#e34a33"},
+  {year:"2023", file:"R2023.geojson", color:"#b30000"}
+];
+
+const arollaCenter = [46.0275, 7.4848];
+const map = L.map("map").setView(arollaCenter, 15);
+
+L.control.scale({
+  position:"topleft",
+  metric:true,
+  imperial:false,
+  maxWidth:180
+}).addTo(map);
+
+const north = L.control({position:"topleft"});
+north.onAdd = function(){
+  const div = L.DomUtil.create("div","north-arrow");
+  div.innerHTML = "<div class='arrow'>↑</div><div>N</div>";
+  return div;
+};
+north.addTo(map);
+
+const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19,
+  attribution:"© OpenStreetMap"
+});
+
+const satellite = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {maxZoom:19, attribution:"Tiles © Esri"}
+).addTo(map);
+
+L.marker(arollaCenter).addTo(map)
+.bindPopup("<b>Arolla</b><br>Point de départ de l'exposition interactive.");
+
+let demLayer = null;
+let mntLayer = null;
+let dodLayer = null;
+let zcLayer = null;
+let zaLayer = null;
+let riverLayers = {};
+let selectedRiverYear = null;
+
+let elevationRaster = null;
+let dodOrRaster = null;
+
+let drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+let profileChartMNT = null;
+let profileChartDoD = null;
+
+let demOpacity = 0.85;
+let mntOpacity = 0.65;
+let dodOpacity = 0.70;
+let riverOpacity = 0.90;
+
+let layerControl = null;
+
+/* Sous-menu des lits intégré dans le panneau Leaflet.
+   Cela évite un deuxième cadre flottant et garde les années comme sous-catégorie. */
+function addLitSelectorInsideLayerControl(){
+  const layerList = document.querySelector(".leaflet-control-layers-list");
+  if(!layerList){ return; }
+
+  const oldSelector = document.getElementById("litSelectorIntegrated");
+  if(oldSelector){ oldSelector.remove(); }
+
+  const div = document.createElement("div");
+  div.id = "litSelectorIntegrated";
+  div.className = "lit-control";
+
+  div.innerHTML = `
+    <div class="lit-control-title">🌊 Lits du cours d’eau</div>
+    <label for="litYearSelect">Sous-catégorie / année</label>
+    <select id="litYearSelect">
+      <option value="">Aucune année</option>
+      <option value="1959">1959</option>
+      <option value="1961">1961</option>
+      <option value="1965">1965</option>
+      <option value="1970">1970</option>
+      <option value="1976">1976</option>
+        <option value="1983">1983</option>
+      <option value="1999">1999</option>
+      <option value="2001">2001</option>
+      <option value="2005">2005</option>
+      <option value="2015">2015</option>
+      <option value="2017">2017</option>
+      <option value="2020">2020</option>
+      <option value="2023">2023</option>
+      <option value="all">Toutes les années</option>
+    </select>
+    <div class="lit-control-note">Les années restent dans la légende active quand elles sont affichées.</div>
+  `;
+
+  layerList.appendChild(div);
+
+  L.DomEvent.disableClickPropagation(div);
+  L.DomEvent.disableScrollPropagation(div);
+
+  const select = div.querySelector("#litYearSelect");
+  if(select){
+    select.value = selectedRiverYear || "";
+    select.addEventListener("change", function(){
+      selectRiverYear(this.value);
+    });
+  }
+}
+
+
+function setStatus(msg){
+  const box = document.getElementById("statusBox");
+  if(box){ box.innerHTML = msg; }
+}
+
+/* Détecte si un GeoJSON est en EPSG:2056.
+   - Si le champ crs contient 2056, on transforme.
+   - Si les premières coordonnées sont très grandes, on transforme aussi. */
+function isEPSG2056GeoJSON(data){
+  const crsName = data && data.crs && data.crs.properties && data.crs.properties.name
+    ? String(data.crs.properties.name)
+    : "";
+
+  if(crsName.includes("2056")){
+    return true;
+  }
+
+  const first = findFirstCoordinate(data);
+  if(first && Math.abs(first[0]) > 1000 && Math.abs(first[1]) > 1000){
+    return true;
+  }
+
+  return false;
+}
+
+function findFirstCoordinate(obj){
+  if(!obj){ return null; }
+
+  if(obj.type === "FeatureCollection" && obj.features && obj.features.length > 0){
+    return findFirstCoordinate(obj.features[0]);
+  }
+
+  if(obj.type === "Feature" && obj.geometry){
+    return findFirstCoordinate(obj.geometry);
+  }
+
+  if(obj.coordinates){
+    return findFirstCoordinateInArray(obj.coordinates);
+  }
+
+  return null;
+}
+
+function findFirstCoordinateInArray(coords){
+  if(!Array.isArray(coords)){ return null; }
+
+  if(typeof coords[0] === "number" && typeof coords[1] === "number"){
+    return coords;
+  }
+
+  for(const item of coords){
+    const found = findFirstCoordinateInArray(item);
+    if(found){ return found; }
+  }
+
+  return null;
+}
+
+function transformGeoJSON2056To4326(data){
+  const copy = JSON.parse(JSON.stringify(data));
+
+  function transformCoords(coords){
+    if(!Array.isArray(coords)){ return coords; }
+
+    if(typeof coords[0] === "number" && typeof coords[1] === "number"){
+      const result = proj4("EPSG:2056", "EPSG:4326", [coords[0], coords[1]]);
+      return [result[0], result[1]];
+    }
+
+    return coords.map(transformCoords);
+  }
+
+  function transformGeometry(geometry){
+    if(!geometry){ return; }
+
+    if(geometry.type === "GeometryCollection" && geometry.geometries){
+      geometry.geometries.forEach(transformGeometry);
+    }else if(geometry.coordinates){
+      geometry.coordinates = transformCoords(geometry.coordinates);
+    }
+  }
+
+  if(copy.type === "FeatureCollection"){
+    copy.features.forEach(feature => transformGeometry(feature.geometry));
+  }else if(copy.type === "Feature"){
+    transformGeometry(copy.geometry);
+  }else{
+    transformGeometry(copy);
+  }
+
+  delete copy.crs;
+  return copy;
+}
+
+function normalizeGeoJSON(data){
+  if(isEPSG2056GeoJSON(data)){
+    return transformGeoJSON2056To4326(data);
+  }
+  return data;
+}
+
+function refreshLayerControl(){
+  if(layerControl){ map.removeControl(layerControl); }
+
+  const baseMaps = {
+    "Satellite": satellite,
+    "OpenStreetMap": osm
+  };
+
+  const overlays = {};
+  if(demLayer){ overlays["Relief ombré"] = demLayer; }
+  if(mntLayer){ overlays["MNT_CN altitude"] = mntLayer; }
+  if(dodLayer){ overlays["Zones de transformation 2019-2024"] = dodLayer; }
+  if(zaLayer){ overlays["Zone habitée (ZA)"] = zaLayer; }
+  if(zcLayer){ overlays["Camping / lieu connu (ZC)"] = zcLayer; }
+  /* Les lits du cours d’eau sont contrôlés uniquement par le sélecteur d’année pour éviter une liste trop lourde. */
+layerControl = L.control.layers(baseMaps, overlays, {collapsed:false}).addTo(map);
+  setTimeout(addLitSelectorInsideLayerControl, 0);
+  updateLegend();
+}
+
+function loadGeoTIFF(file, opacity, zIndex, addToMap, callback){
+  fetch(file + "?v=" + Date.now())
+    .then(response => {
+      if(!response.ok){ throw new Error("Fichier introuvable : " + file); }
+      return response.arrayBuffer();
+    })
+    .then(arrayBuffer => parseGeoraster(arrayBuffer))
+    .then(georaster => {
+      const layer = new GeoRasterLayer({
+        georaster:georaster,
+        opacity:opacity,
+        resolution:256,
+        zIndex:zIndex
+      });
+      if(addToMap){ layer.addTo(map); }
+      callback(layer, georaster);
+    })
+    .catch(error => console.error("Erreur GeoTIFF :", file, error));
+}
+
+function loadRasterOnly(file, callback){
+  fetch(file)
+    .then(response => {
+      if(!response.ok){ throw new Error("Fichier introuvable : " + file); }
+      return response.arrayBuffer();
+    })
+    .then(arrayBuffer => parseGeoraster(arrayBuffer))
+    .then(georaster => callback(georaster))
+    .catch(error => console.error("Erreur raster :", file, error));
+}
+
+loadGeoTIFF(demFile, demOpacity, 400, false, function(layer){
+  demLayer = layer;
+  refreshLayerControl();
+});
+
+loadGeoTIFF(mntDisplayFile, mntOpacity, 500, false, function(layer){
+  mntLayer = layer;
+  refreshLayerControl();
+});
+
+loadRasterOnly(elevationFile, function(georaster){
+  elevationRaster = georaster;
+  console.log("MNT.tif chargé pour les profils");
+});
+
+loadGeoTIFF(dodFile, dodOpacity, 800, false, function(layer){
+  dodLayer = layer;
+  refreshLayerControl();
+});
+
+loadRasterOnly(dodOrFile, function(georaster){
+  dodOrRaster = georaster;
+  console.log("DoD_OR.tif chargé pour le profil morphologique");
+});
+
+function loadRiver(year, file, color){
+  fetch(file + "?v=" + Date.now())
+    .then(response => {
+      if(!response.ok){
+        throw new Error("Fichier introuvable : " + file);
+      }
+      return response.json();
+    })
+    .then(data => {
+      const correctedData = normalizeGeoJSON(data);
+
+      console.log("Lit de rivière " + year + " chargée :", correctedData);
+
+      riverLayers[year] = L.geoJSON(correctedData, {
+        style:{
+          color:color,
+          weight: year === "2015" ? 7 : 4,
+          opacity:riverOpacity
+        },
+        onEachFeature:function(feature, layer){
+          layer.bindPopup("Lit du cours d’eau : " + year);
+        }
+      });
+
+      refreshLayerControl();
+
+      if(year === "2015"){
+        riverLayers[year].addTo(map);
+        riverLayers[year].bringToFront();
+
+        setStatus(
+          "Lit de rivière 2015 chargée correctement. Elle apparaît en magenta pour vérification."
+        );
+      }
+    })
+    .catch(error => {
+      console.error("Erreur lit de rivière " + year + " :", error);
+
+      if(year === "2015"){
+        setStatus(
+          "Erreur : R2015.geojson ne se charge pas. Vérifiez que le fichier est dans le même dossier que le HTML."
+        );
+      }
+    });
+}
+
+riverFiles.forEach(r => loadRiver(r.year, r.file, r.color));
+
+/* =========================================================
+FORÇAGE DE LA RIVIÈRE 2015
+Cette partie force le chargement de R2015.geojson indépendamment
+des autres couches. Elle sert à éviter que la couche 2015 disparaisse
+du panneau Leaflet si elle n'a pas été créée dans la boucle précédente.
+========================================================= */
+function forceLoadR2015(){
+  fetch("R2015.geojson?v=" + Date.now())
+    .then(response => {
+      if(!response.ok){
+        throw new Error("R2015.geojson introuvable");
+      }
+      return response.json();
+    })
+    .then(data => {
+      const correctedData = normalizeGeoJSON(data);
+
+      if(riverLayers["2015"] && map.hasLayer(riverLayers["2015"])){
+        map.removeLayer(riverLayers["2015"]);
+      }
+
+      riverLayers["2015"] = L.geoJSON(correctedData, {
+        style:{
+          color:"#ff00ff",
+          weight:8,
+          opacity:1
+        },
+        onEachFeature:function(feature, layer){
+          layer.bindPopup("Lit du cours d’eau : 2015");
+        }
+      });
+
+      /* R2015 est chargé en mémoire, mais il n'est pas affiché automatiquement.
+         Pour l'afficher, l'utilisateur doit sélectionner 2015 dans le menu des années. */
+      refreshLayerControl();
+      updateLegend();
+
+      setStatus("Lit du cours d’eau 2015 chargé. Sélectionnez 2015 dans le menu pour l'afficher.");
+      console.log("R2015 préparé mais non affiché automatiquement :", correctedData);
+    })
+    .catch(error => {
+      console.error("Erreur chargement forcé R2015 :", error);
+      setStatus("Erreur : R2015.geojson ne se charge pas malgré le chargement forcé.");
+    });
+}
+
+forceLoadR2015();
+
+
+function loadZA(){
+  fetch(zaFile)
+    .then(response => {
+      if(!response.ok){ throw new Error("Fichier introuvable : " + zaFile); }
+      return response.json();
+    })
+    .then(data => {
+      const correctedData = normalizeGeoJSON(data);
+
+      zaLayer = L.geoJSON(correctedData, {
+        style:{
+          color:"#8b6f47",
+          weight:3,
+          opacity:0.95,
+          fillColor:"#d8c6a5",
+          fillOpacity:0.45
+        },
+        onEachFeature:function(feature, layer){
+          layer.bindPopup("Zone habitée / espace de vie");
+        }
+      });
+
+      refreshLayerControl();
+
+      setStatus("ZA chargée correctement. Activez la couche dans le panneau si vous souhaitez l'afficher.");
+    })
+    .catch(error => {
+      console.error("Erreur ZA :", error);
+      setStatus("ZA ne se charge pas. Vérifiez le nom exact : ZA.geojson.");
+    });
+}
+
+loadZA();
+
+fetch(zcFile)
+  .then(response => {
+    if(!response.ok){ throw new Error("Fichier introuvable : " + zcFile); }
+    return response.json();
+  })
+  .then(data => {
+    const correctedData = normalizeGeoJSON(data);
+
+    zcLayer = L.geoJSON(correctedData, {
+      style:{
+        color:"#6a1b9a",
+        weight:2,
+        opacity:0.95,
+        fillColor:"#ce93d8",
+        fillOpacity:0.22
+      },
+      onEachFeature:function(feature, layer){
+        layer.bindPopup("Camping / lieu connu");
+      }
+    });
+    refreshLayerControl();
+  })
+  .catch(error => console.log("Impossible de charger ZC.geojson", error));
+
+const legend = L.control({position:"bottomright"});
+legend.onAdd = function(){
+  const div = L.DomUtil.create("div","legend");
+  div.id = "legendContent";
+  return div;
+};
+legend.addTo(map);
+
+function updateLegend(){
+  const div = document.getElementById("legendContent");
+  if(!div){ return; }
+
+  let html = "<b>Légende active</b><br>";
+
+  if(demLayer && map.hasLayer(demLayer)){
+    html += "<span class='box' style='background:#999'></span>Relief ombré<br>";
+  }
+
+  if(mntLayer && map.hasLayer(mntLayer)){
+    html += "<span class='box' style='background:#8c6d31'></span>MNT_CN / altitude<br>";
+  }
+
+  if(dodLayer && map.hasLayer(dodLayer)){
+    html += "<br><b>Transformations du terrain<br>(2019-2024)</b><br><br>";
+    html += "<span class='box' style='background:#0B79B7'></span>Érosion forte<br>";
+    html += "<span class='box' style='background:#8DB9D1'></span>Érosion modérée<br>";
+    html += "<span class='box' style='background:#E8E8E8'></span>Stabilité ou faible changement<br>";
+    html += "<span class='box' style='background:#E6A07C'></span>Dépôt modéré<br>";
+    html += "<span class='box' style='background:#D80027'></span>Dépôt fort<br>";
+    html += "<br><span style='font-size:11px;color:#666;'>🔎 Zoom recommandé : barre d’échelle ≈ 30 m</span><br>";
+  }
+
+  if(zaLayer && map.hasLayer(zaLayer)){
+    html += "<br><span class='box' style='background:#d8c6a5;border:1px solid #8b6f47'></span>Zone habitée (ZA)<br>";
+  }
+
+  if(zcLayer && map.hasLayer(zcLayer)){
+    html += "<span class='box' style='background:#ce93d8;border:1px solid #6a1b9a'></span>Camping / contexte (ZC)<br>";
+  }
+  const activeLitYears = Object.keys(riverLayers).filter(year => map.hasLayer(riverLayers[year]));
+  if(activeLitYears.length > 0){
+    html += "<br><b>🌊 Lits du cours d’eau</b><br>";
+    activeLitYears.forEach(year => {
+      const river = riverFiles.find(r => r.year === year);
+      const color = river ? river.color : "#000";
+      html += "<span class='line' style='border-color:" + color + "'></span>" + year + "<br>";
+    });
+  }
+
+  if(html === "<b>Légende active</b><br>"){
+    html += "Aucune couche thématique activée.";
+  }
+
+  div.innerHTML = html;
+}
+
+map.on("overlayadd", updateLegend);
+map.on("overlayremove", updateLegend);
+
+let drawControl = new L.Control.Draw({
+  draw:{
+    polygon:false,
+    rectangle:false,
+    circle:false,
+    marker:false,
+    circlemarker:false,
+    polyline:{shapeOptions:{color:"#b86f44",weight:4}}
+  },
+  edit:{featureGroup:drawnItems}
+});
+
+function activateProfileTool(){
+  map.addControl(drawControl);
+}
+
+map.on(L.Draw.Event.CREATED, function(event){
+  drawnItems.clearLayers();
+  const layer = event.layer;
+  drawnItems.addLayer(layer);
+  generateProfile(layer);
+});
+
+function getRasterValueAtLatLng(raster, lat, lng){
+  if(!raster){ return null; }
+
+  const col = Math.floor((lng - raster.xmin) / raster.pixelWidth);
+  const row = Math.floor((raster.ymax - lat) / Math.abs(raster.pixelHeight));
+
+  if(row < 0 || col < 0 || row >= raster.height || col >= raster.width){
+    return null;
+  }
+
+  const value = raster.values[0][row][col];
+
+  if(value === raster.noDataValue || value === null || value === undefined){
+    return null;
+  }
+
+  return value;
+}
+
+function smoothArray(values, windowSize = 15){
+  const smoothed = [];
+
+  for(let i = 0; i < values.length; i++){
+    const start = Math.max(0, i - Math.floor(windowSize / 2));
+    const end = Math.min(values.length, i + Math.floor(windowSize / 2) + 1);
+    const subset = values.slice(start, end).filter(v => v !== null && v !== undefined);
+
+    if(subset.length === 0){
+      smoothed.push(null);
+    } else {
+      const avg = subset.reduce((a,b) => a + b, 0) / subset.length;
+      smoothed.push(Number(avg.toFixed(2)));
+    }
+  }
+
+  return smoothed;
+}
+
+function generateProfile(layer){
+  const latlngs = layer.getLatLngs();
+  const coords = latlngs.map(p => [p.lng, p.lat]);
+  const line = turf.lineString(coords);
+
+  const totalLength = turf.length(line, {units:"meters"});
+
+  const distances = [];
+  const elevations = [];
+  const dodValues = [];
+
+  const samples = 260;
+
+  for(let i=0; i<=samples; i++){
+    const d = totalLength * i / samples;
+    const point = turf.along(line, d, {units:"meters"});
+    const lng = point.geometry.coordinates[0];
+    const lat = point.geometry.coordinates[1];
+
+    const elevation = getRasterValueAtLatLng(elevationRaster, lat, lng);
+    const dod = getRasterValueAtLatLng(dodOrRaster, lat, lng);
+
+    distances.push(Math.round(d));
+
+    if(elevation !== null){
+      elevations.push(Number(elevation.toFixed(2)));
+    } else {
+      elevations.push(null);
+    }
+
+    if(dod !== null){
+      dodValues.push(Number(dod.toFixed(2)));
+    } else {
+      dodValues.push(null);
+    }
+  }
+
+  const smoothElevations = smoothArray(elevations, 19);
+  const smoothDoD = smoothArray(dodValues, 7);
+
+  drawMNTProfile(distances, smoothElevations);
+  drawDoDProfile(distances, smoothDoD);
+}
+
+function drawMNTProfile(distances, elevations){
+  const ctx = document.getElementById("profileChartMNT").getContext("2d");
+
+  if(profileChartMNT){
+    profileChartMNT.destroy();
+  }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 170);
+  gradient.addColorStop(0, "rgba(122,75,42,0.50)");
+  gradient.addColorStop(0.55, "rgba(184,111,68,0.28)");
+  gradient.addColorStop(1, "rgba(244,239,231,0.05)");
+
+  profileChartMNT = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels:distances,
+      datasets:[{
+        label:"Altitude du terrain",
+        data:elevations,
+        borderWidth:2.4,
+        tension:0.68,
+        fill:true,
+        pointRadius:0,
+        pointHoverRadius:3,
+        spanGaps:true,
+        borderColor:"#7a4b2a",
+        backgroundColor:gradient
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:function(context){return "Distance : " + context[0].label + " m";},
+            label:function(context){return "Altitude : " + context.parsed.y + " m s.n.m.";}
+          }
+        }
+      },
+      scales:{
+        x:{
+          title:{display:true,text:"Distance (m)",color:"#233834",font:{weight:"bold",size:9}},
+          ticks:{color:"#304b45", maxTicksLimit:4, font:{size:9}}
+        },
+        y:{
+          beginAtZero:false,
+          grace:"8%",
+          title:{display:true,text:"Altitude (m s.n.m.)",color:"#233834",font:{weight:"bold",size:9}},
+          ticks:{color:"#304b45", maxTicksLimit:4, font:{size:9}}
+        }
+      }
+    }
+  });
+}
+
+function drawDoDProfile(distances, dodValues){
+  const ctx = document.getElementById("profileChartDoD").getContext("2d");
+
+  if(profileChartDoD){
+    profileChartDoD.destroy();
+  }
+
+  profileChartDoD = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels:distances,
+      datasets:[{
+        label:"Variation d'altitude",
+        data:dodValues,
+        borderWidth:0,
+        backgroundColor:function(context){
+          const v = context.raw;
+          if(v === null){ return "rgba(0,0,0,0)"; }
+          if(v > 0){ return "rgba(216,0,39,0.62)"; }
+          if(v < 0){ return "rgba(11,121,183,0.62)"; }
+          return "rgba(180,180,180,0.30)";
+        }
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:function(context){return "Distance : " + context[0].label + " m";},
+            label:function(context){
+              if(context.raw === null){return "DoD : pas de donnée";}
+              if(context.raw > 0){return "Dépôt : +" + context.raw + " m";}
+              if(context.raw < 0){return "Érosion : " + context.raw + " m";}
+              return "Stabilité : 0 m";
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          title:{display:true,text:"Distance (m)",color:"#233834",font:{weight:"bold",size:9}},
+          ticks:{color:"#304b45", maxTicksLimit:4, font:{size:9}}
+        },
+        y:{
+          beginAtZero:true,
+          title:{display:true,text:"DoD (m)",color:"#233834",font:{weight:"bold",size:9}},
+          ticks:{color:"#304b45", maxTicksLimit:4, font:{size:9}},
+          grid:{color:function(context){return context.tick.value === 0 ? "#333" : "rgba(0,0,0,0.08)";}}
+        }
+      }
+    }
+  });
+}
+
+function clearProfile(){
+  drawnItems.clearLayers();
+
+  if(profileChartMNT){
+    profileChartMNT.destroy();
+    profileChartMNT = null;
+  }
+
+  if(profileChartDoD){
+    profileChartDoD.destroy();
+    profileChartDoD = null;
+  }
+}
+
+function goToArolla(){
+  if(demLayer){ map.fitBounds(demLayer.getBounds()); }
+  else{ map.setView(arollaCenter,15); }
+}
+
+function showDEM(){
+  if(demLayer && !map.hasLayer(demLayer)){ demLayer.addTo(map); }
+  if(demLayer){
+    demLayer.setOpacity(demOpacity);
+    map.fitBounds(demLayer.getBounds());
+  }
+  updateLegend();
+}
+
+function hideDEM(){
+  if(demLayer && map.hasLayer(demLayer)){ map.removeLayer(demLayer); }
+  updateLegend();
+}
+
+function setDEMOpacity(value){
+  demOpacity = value / 100;
+  if(demLayer){ demLayer.setOpacity(demOpacity); }
+}
+
+function showMNT(){
+  if(mntLayer && !map.hasLayer(mntLayer)){ mntLayer.addTo(map); }
+  if(mntLayer){
+    mntLayer.setOpacity(mntOpacity);
+    mntLayer.bringToFront();
+    map.fitBounds(mntLayer.getBounds());
+  }
+  updateLegend();
+}
+
+function hideMNT(){
+  if(mntLayer && map.hasLayer(mntLayer)){ map.removeLayer(mntLayer); }
+  updateLegend();
+}
+
+function setMNTOpacity(value){
+  mntOpacity = value / 100;
+  if(mntLayer){ mntLayer.setOpacity(mntOpacity); }
+}
+
+function showDoD(){
+  if(dodLayer && !map.hasLayer(dodLayer)){ dodLayer.addTo(map); }
+  if(dodLayer){
+    dodLayer.setOpacity(dodOpacity);
+    dodLayer.bringToFront();
+    map.fitBounds(dodLayer.getBounds());
+  }
+  updateLegend();
+}
+
+function hideDoD(){
+  if(dodLayer && map.hasLayer(dodLayer)){ map.removeLayer(dodLayer); }
+  updateLegend();
+}
+
+function setDoDOpacity(value){
+  dodOpacity = value / 100;
+  if(dodLayer){ dodLayer.setOpacity(dodOpacity); }
+}
+
+function showZA(){
+  if(zaLayer && !map.hasLayer(zaLayer)){ zaLayer.addTo(map); }
+  if(zaLayer){ zaLayer.bringToFront(); }
+  updateLegend();
+
+  if(!zaLayer){
+    setStatus("La couche ZA n'est pas encore chargée. Vérifiez le nom du fichier.");
+  }
+}
+
+function hideZA(){
+  if(zaLayer && map.hasLayer(zaLayer)){ map.removeLayer(zaLayer); }
+  updateLegend();
+}
+
+function showZC(){
+  if(zcLayer && !map.hasLayer(zcLayer)){ zcLayer.addTo(map); }
+  if(zcLayer){ zcLayer.bringToFront(); }
+  updateLegend();
+}
+
+function hideZC(){
+  if(zcLayer && map.hasLayer(zcLayer)){ map.removeLayer(zcLayer); }
+  updateLegend();
+}
+
+
+function selectRiverYear(year){
+  hideAllRivers();
+  selectedRiverYear = year;
+
+  if(year === ""){
+    setStatus("Aucune année sélectionnée pour le lit du cours d’eau.");
+    updateLegend();
+    return;
+  }
+
+  if(year === "all"){
+    showAllRivers();
+    setStatus("Tous les lits du cours d’eau sont affichés.");
+    return;
+  }
+
+  if(riverLayers[year]){
+    riverLayers[year].addTo(map);
+    riverLayers[year].bringToFront();
+    setStatus("Lit du cours d’eau affiché pour l’année " + year + ".");
+  }else{
+    setStatus("Le lit du cours d’eau de " + year + " n’est pas encore chargé ou le fichier est absent.");
+  }
+
+  updateLegend();
+}
+
+function showAllRivers(){
+  Object.values(riverLayers).forEach(layer => {
+    if(!map.hasLayer(layer)){ layer.addTo(map); }
+    layer.bringToFront();
+  });
+  if(demLayer){ map.fitBounds(demLayer.getBounds()); }
+  updateLegend();
+}
+
+function hideAllRivers(){
+  Object.values(riverLayers).forEach(layer => {
+    if(map.hasLayer(layer)){ map.removeLayer(layer); }
+  });
+  updateLegend();
+}
+
+function showRecentRivers(){
+  hideAllRivers();
+  ["2015","2017","2020","2023"].forEach(year => {
+    if(riverLayers[year]){
+      riverLayers[year].addTo(map);
+      riverLayers[year].bringToFront();
+    }else if(year === "2015"){
+      setStatus("La lit de rivière 2015 n'est pas chargée. Vérifiez le nom R2015.geojson.");
+    }
+  });
+  if(demLayer){ map.fitBounds(demLayer.getBounds()); }
+  updateLegend();
+}
+
+function showOldRivers(){
+  hideAllRivers();
+  ["1959","1961","1965","1970","1976","1983","1999","2001","2005"].forEach(year => {
+    if(riverLayers[year]){
+      riverLayers[year].addTo(map);
+      riverLayers[year].bringToFront();
+    }
+  });
+  if(demLayer){ map.fitBounds(demLayer.getBounds()); }
+  updateLegend();
+}
+
+function setRiverOpacity(value){
+  riverOpacity = value / 100;
+  Object.values(riverLayers).forEach(layer => {
+    layer.eachLayer(function(featureLayer){
+      featureLayer.setStyle({opacity:riverOpacity});
+    });
+  });
+}
+
+/* Sécurité d'affichage initial :
+   après le chargement des couches, aucun lit du cours d'eau ne doit être visible par défaut.
+   Les lits s'affichent seulement si l'utilisateur choisit une année dans le sélecteur. */
+setTimeout(function(){
+  hideAllRivers();
+  selectedRiverYear = "";
+  const select = document.getElementById("litYearSelect");
+  if(select){ select.value = ""; }
+  updateLegend();
+}, 1200);
+
+</script>
+
+</body>
+</html>
